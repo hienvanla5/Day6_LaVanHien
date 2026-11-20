@@ -6,6 +6,13 @@
 
 <h1>Index</h1>
 
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger" role="alert">
+        @TempData["Error"]
+    </div>
+}
+
 <p>
     <a asp-action="Create">Create New</a>
 </p>
@@ -30,7 +37,8 @@
             <td>
                 @if (item.Movies?.Any() == true)
                 {
-                    @string.Join(", ", item.Movies.Select(m => m.Title))
+                    <span>@string.Join(", ", item.Movies.Select(m => m.Title))</span>
+                    <span class="badge bg-secondary ms-2">@item.Movies.Count phim</span>
                 }
                 else
                 {
@@ -40,7 +48,14 @@
             <td>
                 <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
                 <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+                @if (item.Movies?.Any() == true)
+                {
+                    <span class="text-muted" title="Không thể xóa thể loại đang có phim">Delete</span>
+                }
+                else
+                {
+                    <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+                }
             </td>
         </tr>
 }

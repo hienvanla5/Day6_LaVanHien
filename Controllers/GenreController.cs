@@ -1,4 +1,4 @@
-
+﻿
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Day6_LaVanHien.Models;
@@ -123,10 +123,17 @@ public class GenreController : Controller
         }
 
         var genre = await _context.Genre
+            .Include(g => g.Movies)
             .FirstOrDefaultAsync(m => m.Id == id);
         if (genre == null)
         {
             return NotFound();
+        }
+
+        if (genre.Movies.Any())
+        {
+            TempData["Error"] = $"Không thể xóa '{genre.Name}' vì đang có {genre.Movies.Count} phim.";
+            return RedirectToAction(nameof(Index));
         }
 
         return View(genre);
@@ -137,13 +144,20 @@ public class GenreController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(int? id)
     {
-        var genre = await _context.Genre.FindAsync(id);
-        if (genre != null)
+        var genre = await _context.Genre
+            .Include(g => g.Movies)
+            .FirstOrDefaultAsync(g => g.Id == id);
+
+        if (genre == null) return NotFound();
+        if (genre.Movies.Any())
         {
-            _context.Genre.Remove(genre);
+            TempData["Error"] = $"Không thể xóa '{genre.Name}' vì đang có {genre.Movies.Count} phim.";
+            return RedirectToAction(nameof(Index));
         }
 
-        await _context.SaveChangesAsync();
+        _context.Genre.Remove(genre);
+        try { await _context.SaveChangesAsync(); }
+        catch (DbUpdateException) { TempData["Error"] = $"Không thể xóa '{genre.Name}' vì thể loại đang được sử dụng."; }
         return RedirectToAction(nameof(Index));
     }
 
